@@ -89,9 +89,8 @@ function bilan(s){
     const avg = found.length ? found.reduce((n, e) => n + e.ms, 0) / found.length / 1000 : null;
     let indice = 0;
     if(found.length){
-      const precision = found.length / es.length;
-      const speed = Math.min(1, Math.max(0.2, 1 - (avg - 8) / 80));
-      indice = Math.round(100 * (0.6 * precision + 0.4 * speed));
+      // seule la vitesse compte : passer un mot ne coûte rien
+      indice = Math.round(100 * Math.min(1, Math.max(0.15, 1 - (avg - 5) / 60)));
     }
     const fastest = found.slice().sort((a, b) => a.ms - b.ms)[0] || null;
     return { label: g.label, names: g.names, key: g.key, found: found.length, missed: missed.length, avg, indice,
@@ -99,9 +98,9 @@ function bilan(s){
       stuck: missed.length ? missed[missed.length - 1].w : null };
   });
   const all = s.log.filter(e => !e.skip), allFound = all.filter(e => e.ok);
-  let overall = rows.length ? Math.round(rows.reduce((n, r) => n + r.indice * Math.max(1, r.found + r.missed), 0) / rows.reduce((n, r) => n + Math.max(1, r.found + r.missed), 0)) : 0;
+  let overall = allFound.length ? Math.round(rows.reduce((n, r) => n + r.indice * r.found, 0) / allFound.length) : 0;
   if(!allFound.length) overall = 0;
-  return { rows, overall, banned: s.banned.slice(), found: allFound.length, missed: all.length - allFound.length };
+  return { rows, overall, found: allFound.length, missed: all.length - allFound.length };
 }
 const teamOf = (s, t) => s.players.filter(p => p.team === t);
 function giverOf(s, turn = s.turn){
@@ -155,17 +154,6 @@ function applyAction(s, a, idx){
     if(s.phase === "play" && s.turnPts >= POINTS_PAR_TOUR) endTurn(s);
     return true;
   }
-  if(a === "skiptheme"){
-    // « Pas notre truc » : on zappe sans pénalité et le thème ne revient plus de la partie
-    s.log.push({ g: g.id, t: g.team, w: w.w, ok: false, ms, skip: true });
-    if(!w.perso && !s.banned.includes(w.c)){
-      s.banned.push(w.c);
-      s.deck = s.deck.slice(0, s.idx + 1).concat(s.deck.slice(s.idx + 1).filter(x => x.perso || x.c !== w.c));
-    }
-    s.last = { w: w.w, ok: false, skip: true, c: w.perso ? null : w.c };
-    nextWord(s);
-    return true;
-  }
   if(a === "endturn"){ endTurn(s); return true; }
   return false;
 }
@@ -175,7 +163,7 @@ function viewFor(s, pid, online){
     players: s.players.map(p => ({ id: p.id, name: p.name, team: p.team, on: online ? online(p.id) : true })),
     teams: s.teams, phase: s.phase, turnPts: s.turnPts, scores: s.scores, last: s.last, prev: s.prev, idx: s.idx,
     timer: s.cfg.timer, ends: s.endsAt, remaining: s.endsAt ? Math.max(0, s.endsAt - Date.now()) : null,
-    turn: s.turn, total: totalTurns(s), banned: s.banned,
+    turn: s.turn, total: totalTurns(s),
     bilan: s.phase === "end" ? bilan(s) : null,
     giver: { id: g.id, name: g.name, team: g.team },
     guessers: guessersOf(s).map(p => p.name),
@@ -259,12 +247,11 @@ function home(){
     <ol>
       <li>Celui qui fait deviner voit un mot. Il le fait trouver à son coéquipier <b>uniquement avec des références à votre vie</b> : « ta mère est fan », « ce qu'on a bu au mariage de Julien »…</li>
       <li>Interdit de dire le mot, de le décrire de façon neutre ou de mimer.</li>
-      <li>Chaque mot trouvé rapporte 1 point. Bloqué ? On passe, mais ça compte dans le verdict.</li>
-      <li>Un thème qui ne vous parle pas (le sport, la télé…) ? Zappez-le : aucune pénalité, et il ne revient plus de la partie.</li>
+      <li>Chaque mot trouvé rapporte 1 point. Un mot ou un thème qui ne vous parle pas ? On passe, sans aucune pénalité.</li>
       <li>Tous les ${POINTS_PAR_TOUR} points, on change de tour. Avec le chrono, le tour s'arrête aussi quand le temps est écoulé.</li>
       <li>À 4 : deux équipes de 2. L'équipe adverse voit aussi le mot et vérifie qu'on triche pas. À 2 : on joue pour le plaisir, chacun son tour.</li>
       <li>Avant la partie, vous pouvez ajouter vos propres mots : un pote commun, une soirée, une expression à vous.</li>
-      <li>À la fin, le jeu rend son verdict : un indice de complicité sur 100, selon les mots trouvés, passés et la vitesse.</li>
+      <li>À la fin, le jeu rend son verdict : un indice de complicité sur 100, selon la vitesse à laquelle vous trouvez les mots.</li>
     </ol>
   </details>
   ${shopCard()}`;
@@ -357,7 +344,6 @@ function scoreboard(v){
 function dots(n){ let s = '<div class="dots" aria-label="' + n + ' sur ' + POINTS_PAR_TOUR + ' points ce tour">'; for(let i=0;i<POINTS_PAR_TOUR;i++) s += `<i class="${i < n ? "f" : ""}"></i>`; return s + "</div>"; }
 function lastLine(v){
   if(!v.last) return `<p class="last"></p>`;
-  if(v.last.skip) return `<p class="last"><span class="sk">Zappé :</span> <b>${esc(v.last.w)}</b>${v.last.c ? ` · plus de « ${esc(v.last.c)} » cette partie` : ""}</p>`;
   return `<p class="last"><span class="${v.last.ok ? "ok" : "no"}">${v.last.ok ? "Trouvé" : "Passé"} :</span> <b>${esc(v.last.w)}</b></p>`;
 }
 let lastShownIdx = -1;
@@ -365,8 +351,7 @@ function wordCard(v, label){
   const pop = lastShownIdx !== v.idx ? " pop" : ""; lastShownIdx = v.idx;
   return `${label ? `<span class="badge">${esc(label)}</span>` : ""}
   <div class="wordcard${pop}${v.word.perso ? " perso" : ""}"><span class="num">${v.turnPts}/${POINTS_PAR_TOUR}</span><span class="cat">${esc(v.word.c)}</span><span class="word">${esc(v.word.w)}</span></div>
-  <div class="row2"><button class="o" data-act="pass" data-idx="${v.idx}">Passer</button><button data-act="found" data-idx="${v.idx}">Trouvé +1</button></div>
-  <button class="zap" data-act="skiptheme" data-idx="${v.idx}">${v.word.perso ? "Zapper ce mot" : `Pas notre truc : zapper « ${esc(v.word.c)} »`} <span>sans pénalité</span></button>`;
+  <div class="row2"><button class="o" data-act="pass" data-idx="${v.idx}">Passer</button><button data-act="found" data-idx="${v.idx}">Trouvé +1</button></div>`;
 }
 function handoffPanel(v, canStart, localMode){
   let prev = `<p class="muted">Première manche.</p>`;
@@ -444,8 +429,7 @@ function bilanView(v, canReplay){
     <p>${esc(line)}</p>
   </section>
   <ul class="bl">${rows}</ul>
-  ${B.banned.length ? `<p class="muted small">Thèmes zappés sans pénalité : ${esc(andList(B.banned))}.</p>` : ""}
-  <p class="muted small">L'indice mélange les mots trouvés plutôt que passés et la vitesse pour les trouver. Les thèmes zappés ne comptent pas.</p>
+  <p class="muted small">L'indice se calcule sur le temps mis à trouver chaque mot. Les mots passés ne comptent pas.</p>
   ${shopCard()}
   <div class="row2"><button data-act="share">Partager le verdict</button>${canReplay ? `<button class="o" data-act="replay">Rejouer</button>` : `<span class="muted small" style="align-self:center">L'hôte peut relancer une partie.</span>`}</div>`;
 }
@@ -623,7 +607,7 @@ function hostAct(a, pid, idx){
   const s = host.game; if(!s) return;
   const g = giverOf(s);
   let ok = false;
-  if(a === "found" || a === "pass" || a === "skiptheme") ok = canSee(s, pid);
+  if(a === "found" || a === "pass") ok = canSee(s, pid);
   else if(a === "start" || a === "endturn") ok = pid === g.id || pid === myPid;
   else if(a === "finish") ok = pid === myPid;
   if(ok && applyAction(s, a, idx)){ saveHost(); broadcast(); }
@@ -767,7 +751,7 @@ app.addEventListener("click", e => {
       else if(navigator.clipboard) navigator.clipboard.writeText(text).then(() => done("Copié !"), () => done("Copie impossible"));
       break;
     }
-    case "start": case "found": case "pass": case "endturn": case "skiptheme": case "finish":
+    case "start": case "found": case "pass": case "endturn": case "finish":
       if(ui === "local"){ if(applyAction(local, act, idx)){ store.set("local", local); render(); } }
       else send(act, idx);
       break;

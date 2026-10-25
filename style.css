@@ -162,13 +162,6 @@ span.tchip{display:inline-block}
 .timer{font-family:var(--mono);font-size:22px;font-variant-numeric:tabular-nums;border:3px solid var(--ink);padding:2px 8px;min-width:76px;text-align:center}
 .timer.low{background:var(--ink);color:var(--paper)}
 
-/* joker thème */
-.zap{background:none;border:2px dashed var(--ink);color:var(--ink);box-shadow:none;font:700 14px var(--body);text-transform:none;letter-spacing:0;padding:10px 12px;display:flex;justify-content:space-between;gap:10px;align-items:center;text-align:left}
-.zap span{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:var(--grey);white-space:nowrap}
-.zap:active{transform:none;background:var(--soft)}
-.last .sk::before{content:"↷ ";font-weight:800;color:var(--ink)}
-.turn .kicker{font-size:11px}
-
 /* verdict */
 .verdict{background:var(--ink);color:var(--paper);padding:28px 20px 30px;text-align:center;display:flex;flex-direction:column;gap:10px;align-items:center}
 .verdict .kicker{color:#bdbdbd}
@@ -191,3 +184,5 @@ span.tchip{display:inline-block}
 .shop-t{grid-column:1;font-family:var(--display);text-transform:uppercase;font-size:20px;line-height:1}
 .shop-go{grid-column:2;grid-row:1/4;font-weight:800;text-transform:uppercase;letter-spacing:1px;border-bottom:3px solid var(--ink)}
 .shop:active{transform:translate(4px,4px);box-shadow:1px 1px 0 var(--ink)}
+
+.turn .kicker{font-size:11px}
