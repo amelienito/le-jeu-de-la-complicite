@@ -1,6 +1,6 @@
 # Le Jeu de la Complicité
 
-Site **non officiel** pour jouer au jeu de la complicité de l'émission *Un Bon Moment* (Kyan Khojandi et Navo). Aucun lien avec eux. Pour les soutenir : [Une Bonne Boutique](https://unebonneboutique.com).
+Site **non officiel** pour jouer au jeu de la complicité de l'émission *Un Bon Moment* (Kyan Khojandi et Navo). Aucun lien avec eux. Pour les soutenir : [la collection Un Bon Moment sur Une Bonne Boutique](https://unebonneboutique.com/collections/un-bon-moment-1).
 
 ## Le principe
 

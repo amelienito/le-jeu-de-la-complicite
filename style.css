@@ -184,3 +184,10 @@ span.tchip{display:inline-block}
 .meter{height:12px;border:2px solid var(--ink)}
 .meter i{display:block;height:100%;background:var(--ink)}
 .bl b{color:var(--ink)}
+
+/* encart boutique */
+.shop{display:grid;grid-template-columns:1fr auto;gap:4px 12px;align-items:center;border:3px solid var(--ink);padding:14px 16px;color:var(--ink);text-decoration:none;box-shadow:5px 5px 0 var(--ink)}
+.shop .kicker,.shop .muted{grid-column:1}
+.shop-t{grid-column:1;font-family:var(--display);text-transform:uppercase;font-size:20px;line-height:1}
+.shop-go{grid-column:2;grid-row:1/4;font-weight:800;text-transform:uppercase;letter-spacing:1px;border-bottom:3px solid var(--ink)}
+.shop:active{transform:translate(4px,4px);box-shadow:1px 1px 0 var(--ink)}
