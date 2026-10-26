@@ -253,8 +253,7 @@ function home(){
       <li>Avant la partie, vous pouvez ajouter vos propres mots : un pote commun, une soirée, une expression à vous.</li>
       <li>À la fin, le jeu rend son verdict : un indice de complicité sur 100, selon la vitesse à laquelle vous trouvez les mots.</li>
     </ol>
-  </details>
-  ${shopCard()}`;
+  </details>`;
 }
 
 // --- réglages (thèmes + chrono), éditables par l'hôte ou en local ---
@@ -386,15 +385,6 @@ function localGame(){
   return `${scoreboard(v)}${body}<div class="row2"><button class="link" data-act="finish">Terminer et voir le verdict</button><button class="link" data-act="quit-local">Quitter la partie</button></div>`;
 }
 
-function shopCard(){
-  return `<a class="shop" href="https://unebonneboutique.com/products/mug-1" target="_blank" rel="noopener">
-    <span class="kicker">La boutique</span>
-    <span class="shop-t">Un BON MUG blanc</span>
-    <span class="muted small">Le mug Un Bon Moment, sur Une Bonne Boutique. 15 €</span>
-    <span class="shop-go">Voir ↗</span>
-  </a>`;
-}
-
 // --- verdict de fin ---
 function bilanText(v){
   const B = v.bilan, [, title] = verdictOf(B.overall);
@@ -430,7 +420,6 @@ function bilanView(v, canReplay){
   </section>
   <ul class="bl">${rows}</ul>
   <p class="muted small">L'indice se calcule sur le temps mis à trouver chaque mot. Les mots passés ne comptent pas.</p>
-  ${shopCard()}
   <div class="row2"><button data-act="share">Partager le verdict</button>${canReplay ? `<button class="o" data-act="replay">Rejouer</button>` : `<span class="muted small" style="align-self:center">L'hôte peut relancer une partie.</span>`}</div>`;
 }
 
